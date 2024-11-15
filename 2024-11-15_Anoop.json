@@ -1,0 +1,15 @@
+{
+    "emp_name": "Anoop",
+    "emp_id": 1,
+    "login_time": "2024-11-15 12:19",
+    "logout_time": "2024-11-15 12:19",
+    "tasks": [
+        {
+            "task_title": "Task 1",
+            "task_description": "Finished the Employee Tracking Task",
+            "start_time": "2024-11-15 12:19",
+            "end_time": "2024-11-15 12:19",
+            "task_success": true
+        }
+    ]
+}
