@@ -1,0 +1,10 @@
+
+All the given topics were covered successfully.
+    a) Inspect - Tabs: Analyzing web page elements and structure through browser developer tools.
+    b) GET & POST requests: Methods for requesting data from and sending data to a web server.
+    c) PUT, DELETE, HEAD, PATCH, OPTIONS: HTTP methods for updating, deleting, retrieving headers, partially updating resources, and requesting available methods.
+    d) Inspect AJAX-loaded URLs: Examining URLs that load content dynamically using AJAX.
+    e) Client-side JavaScript execution: Running and debugging JavaScript code executed in the browser.
+    f) Request and response headers: Analyzing headers in HTTP requests and responses for additional metadata and control.
+    g) Cookies, session: Managing state and data storage across multiple requests using cookies and sessions.
+    h) User-agent: Identifying the browser and operating system making a request through the user-agent string.
