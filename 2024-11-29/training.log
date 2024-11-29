@@ -1,2 +1,7 @@
 Task completed: Developed Olx site webscraping using requests and parsel modules.
-Had a meeting with Aneesh ettan and discussed about the Tasks given and clarified doubts.
+Had a meeting with Aneesh Ettan. In the meeting, previous topics were discussed, and new topics were assigned.
+Topics covered today:
+    Mongodb
+    Insert, delete, update, bulk insert
+    GUI tools - compass
+    What is object ID and how to generate a timestamp from object?
