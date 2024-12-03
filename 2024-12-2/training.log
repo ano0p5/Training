@@ -1,0 +1,10 @@
+Updated requests and Parsel code for olx site by shortening the XPath.
+
+Completed Mongodb Topics:
+    Mongodb guidelines
+        Indexing with the unique key
+        Collection and database sharding
+        Naming standards for collections and databases
+        Data backup
+    Psql
+    Mysql : insert delete and update
