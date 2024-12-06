@@ -1,0 +1,3 @@
+Revised the previous topics.
+Updated Olx scraper code to save scraped data in MongoDB.
+The Olx website was down due to some technical errors so the scraping part is yet to be done.(error image is attached herewith)

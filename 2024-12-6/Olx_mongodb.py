@@ -1,10 +1,10 @@
 import requests
 from parsel import Selector
 import random
-import json
+import pymongo
+from pymongo import MongoClient
 
 class OLXScraper:
-    
     user_agents = [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Firefox/89.0",
@@ -14,6 +14,10 @@ class OLXScraper:
     ]
 
     def __init__(self):
+        self.client = MongoClient('mongodb://localhost:27017/') 
+        self.db = self.client["olx_scraper_db"] 
+        self.collection = self.db["property_listings"]  
+        
         self.session = requests.Session()
         self.session.headers.update({
             "accept": "/",
@@ -21,17 +25,8 @@ class OLXScraper:
             "accept-language": "en-US,en;q=0.9",
             "User-Agent": random.choice(self.user_agents)  
         })
-        self.results = []  
         self.max_results = 500  
         self.page_counter = 0  
-        self.json_filename = 'scraped_olxdata.json'
-
-        try:
-            with open(self.json_filename, 'r', encoding='utf-8') as f:
-                self.results = json.load(f)  
-        except FileNotFoundError:
-            with open(self.json_filename, 'w', encoding='utf-8') as f:
-                json.dump([], f, ensure_ascii=False, indent=4)  
 
     def fetch_page(self, url):
         print(f"Fetching: {url}")  
@@ -49,21 +44,18 @@ class OLXScraper:
 
         url_prefix = "https://www.olx.in"
 
-        
         for listing in selector.xpath("//li[@class='_1DNjI']"):
             relative_url = listing.css('a::attr(href)').get()  
             if relative_url:
                 listing_url = url_prefix + relative_url  
                 print(f"Fetching listing: {listing_url}")
                 self.parse_listing(listing_url)
-
-                
-                if len(self.results) >= self.max_results:
-                    print("Reached maximum limit of 1000 listings.")
+                if self.collection.count_documents({}) >= self.max_results:
+                    print("Reached maximum limit of 500 listings.")
                     return
-                
+
         next_page_url = selector.css('a._30kbx.da3cR::attr(href)').get()
-        if next_page_url and len(self.results) < self.max_results:
+        if next_page_url and self.collection.count_documents({}) < self.max_results:
             next_page_full_url = url_prefix + next_page_url
             print(f"Going to next page: {next_page_full_url}")
             self.page_counter += 1
@@ -76,34 +68,28 @@ class OLXScraper:
             return
 
         data = {
-            'property_name': selector.css('h1[data-aut-id="itemTitle"]::text').get(default='N/A'),
-            'property_id': selector.xpath("//div[@class='_1-oS0']//strong/text()").getall() and selector.xpath("//div[@class='_1-oS0']//strong/text()").getall()[2] or 'N/A',
-            'breadcrumbs': selector.xpath("//ol[@class='rui-2Pidb']/li/a[@class='_26_tZ']/text()").getall() or ['N/A'],
-            'price': selector.css('span[data-aut-id="itemPrice"]::text').get() or 'N/A',
-            'image_url': selector.css('img[data-aut-id="defaultImg"]::attr(src)').get() or 'N/A',
-            'description': selector.css('div[data-aut-id="itemDescriptionContent"] p::text').getall() or ['N/A'],
-            'seller_name': selector.xpath('//div[@class="eHFQs"]/text()[normalize-space()]').get(default='N/A'),
-            'location': selector.xpath('//span[@class="_1RkZP"]/text()').get(default='N/A'),
-            'property_type': selector.xpath('//span[@class="B6X7c"]/text()').get(default='N/A'),
-            'bathrooms': selector.xpath('//span[@data-aut-id="value_bathrooms"]/text()').get(default='N/A'),
-            'bedrooms': selector.xpath('//span[@data-aut-id="value_rooms"]/text()').get(default='N/A'),
+            'property_name': selector.css('h1[data-aut-id="itemTitle"]::text').get(),
+            'property_id': selector.xpath("//div[@class='_1-oS0']//strong/text()").getall()[2] if selector.xpath("//div[@class='_1-oS0']//strong/text()").getall() else None,
+            'breadcrumbs': selector.xpath("//ol[@class='rui-2Pidb']/li/a[@class='_26_tZ']/text()").getall(),
+            'price': selector.css('span[data-aut-id="itemPrice"]::text').get(),
+            'image_url': selector.css('img[data-aut-id="defaultImg"]::attr(src)').get(),
+            'description': selector.css('div[data-aut-id="itemDescriptionContent"] p::text').getall(),
+            'seller_name': selector.xpath('//div[@class="eHFQs"]/text()[normalize-space()]').get(),
+            'location': selector.xpath('//span[@class="_1RkZP"]/text()').get(),
+            'property_type': selector.xpath('//span[@class="B6X7c"]/text()').get(),
+            'bathrooms': selector.xpath('//span[@data-aut-id="value_bathrooms"]/text()').get(),
+            'bedrooms': selector.xpath('//span[@data-aut-id="value_rooms"]/text()').get(),
         }
 
-        
-        self.results.append(data)
-        print(data)
+        if any(value for value in data.values()):  
+            self.collection.insert_one(data)
+            print(f"Inserted data: {data}")
 
-        
-        with open(self.json_filename, 'w', encoding='utf-8') as f:
-            json.dump(self.results, f, ensure_ascii=False, indent=4)
-
-    def save_to_json(self):
-        
-        with open(self.json_filename, 'w', encoding='utf-8') as f:
-            json.dump(self.results, f, ensure_ascii=False, indent=4)
-        print(f"Data saved to {self.json_filename}")
+    def save_to_mongo(self):
+        print("Finished scraping. Data stored in MongoDB.")
 
 if __name__ == "__main__":
     scraper = OLXScraper()
     start_url = "https://www.olx.in/kozhikode_g4058877/for-rent-houses-apartments_c1723"
     scraper.parse_listing_page(start_url)
+
